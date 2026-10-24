@@ -6,6 +6,7 @@
 </head>
 <body>
     <p>Logado como {{ user.username }}</p>
+    <p><a href="{% url 'vendedor_lista' %}">Vendedores</a></p>
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button>Sair</button>

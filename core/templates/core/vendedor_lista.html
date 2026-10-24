@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Vendedores</title>
+</head>
+<body>
+    <p><a href="{% url 'home' %}">Início</a></p>
+    <h1>Vendedores</h1>
+
+    <form method="get">
+        <input type="text" name="busca" value="{{ busca }}" placeholder="Buscar por nome">
+        <button>Filtrar</button>
+    </form>
+
+    <p><a href="{% url 'vendedor_criar' %}">+ Novo vendedor</a></p>
+
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Nº de vendas</th>
+            <th>Ações</th>
+        </tr>
+        {% for vendedor in vendedores %}
+        <tr>
+            <td>{{ vendedor.id }}</td>
+            <td>{{ vendedor.nome }}</td>
+            <td>{{ vendedor.numero_vendas }}</td>
+            <td>
+                <a href="{% url 'vendedor_editar' vendedor.id %}">Editar</a>
+                <a href="{% url 'vendedor_excluir' vendedor.id %}">Excluir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhum vendedor encontrado.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
