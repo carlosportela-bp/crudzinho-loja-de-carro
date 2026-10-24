@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Loja de Carros</title>
+</head>
+<body>
+    <p>Logado como {{ user.username }}</p>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button>Sair</button>
+    </form>
+</body>
+</html>
