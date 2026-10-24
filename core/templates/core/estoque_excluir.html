@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Excluir veículo</title>
+</head>
+<body>
+    <h1>Excluir veículo</h1>
+    <p>Tem certeza que quer excluir o veículo <strong>{{ veiculo }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button>Sim, excluir</button>
+        <a href="{% url 'estoque_lista' %}">Cancelar</a>
+    </form>
+</body>
+</html>

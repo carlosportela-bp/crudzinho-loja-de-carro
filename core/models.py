@@ -12,3 +12,23 @@ class Vendedor(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class Estoque(models.Model):
+    TIPOS = [
+        (1, 'Carro'),
+        (2, 'Moto'),
+        (3, 'Caminhonete'),
+    ]
+
+    id_carro = models.AutoField(primary_key=True)
+    tipo_veiculo = models.IntegerField(choices=TIPOS)
+    consignado = models.BooleanField(default=False)
+
+    class Meta:
+        managed = False
+        db_table = 'estoque'
+        ordering = ['id_carro']
+
+    def __str__(self):
+        return f'#{self.id_carro} - {self.get_tipo_veiculo_display()}'

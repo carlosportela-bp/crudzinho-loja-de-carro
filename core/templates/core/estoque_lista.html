@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Estoque</title>
+</head>
+<body>
+    <p><a href="{% url 'home' %}">Início</a></p>
+    <h1>Estoque</h1>
+
+    <form method="get">
+        <select name="tipo">
+            <option value="">Todos os tipos</option>
+            {% for valor, nome in tipos %}
+                <option value="{{ valor }}" {% if tipo == valor|stringformat:'s' %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+        </select>
+        <select name="consignado">
+            <option value="">Consignado ou não</option>
+            <option value="sim" {% if consignado == 'sim' %}selected{% endif %}>Só consignados</option>
+            <option value="nao" {% if consignado == 'nao' %}selected{% endif %}>Só próprios</option>
+        </select>
+        <button>Filtrar</button>
+    </form>
+
+    <p><a href="{% url 'estoque_criar' %}">+ Novo veículo</a></p>
+
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Consignado</th>
+            <th>Ações</th>
+        </tr>
+        {% for veiculo in veiculos %}
+        <tr>
+            <td>{{ veiculo.id_carro }}</td>
+            <td>{{ veiculo.get_tipo_veiculo_display }}</td>
+            <td>{{ veiculo.consignado|yesno:'Sim,Não' }}</td>
+            <td>
+                <a href="{% url 'estoque_editar' veiculo.id_carro %}">Editar</a>
+                <a href="{% url 'estoque_excluir' veiculo.id_carro %}">Excluir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhum veículo encontrado.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
