@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>Excluir vendedor</h1>
+    {% if erro %}<p style="color: red">{{ erro }}</p>{% endif %}
     <p>Tem certeza que quer excluir <strong>{{ vendedor.nome }}</strong>?</p>
     <form method="post">
         {% csrf_token %}

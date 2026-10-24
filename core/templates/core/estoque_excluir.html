@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>Excluir veículo</h1>
+    {% if erro %}<p style="color: red">{{ erro }}</p>{% endif %}
     <p>Tem certeza que quer excluir o veículo <strong>{{ veiculo }}</strong>?</p>
     <form method="post">
         {% csrf_token %}

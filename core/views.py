@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import EstoqueForm, VendedorForm
-from .models import Estoque, Vendedor
+from .forms import CarroVendaForm, EstoqueForm, VendedorForm
+from .models import CarroVenda, Estoque, Vendedor
 
 
 @login_required
@@ -45,10 +46,14 @@ def vendedor_editar(request, id):
 @login_required
 def vendedor_excluir(request, id):
     vendedor = get_object_or_404(Vendedor, id=id)
+    erro = None
     if request.method == 'POST':
-        vendedor.delete()  # DELETE FROM vendedores WHERE id = ...
-        return redirect('vendedor_lista')
-    return render(request, 'core/vendedor_excluir.html', {'vendedor': vendedor})
+        try:
+            vendedor.delete()  # DELETE FROM vendedores WHERE id = ...
+            return redirect('vendedor_lista')
+        except ProtectedError:
+            erro = 'Não é possível excluir: este vendedor tem vendas registradas.'
+    return render(request, 'core/vendedor_excluir.html', {'vendedor': vendedor, 'erro': erro})
 
 
 # Consultar estoque (com filtro por tipo e consignado)
@@ -95,7 +100,62 @@ def estoque_editar(request, id):
 @login_required
 def estoque_excluir(request, id):
     veiculo = get_object_or_404(Estoque, id_carro=id)
+    erro = None
     if request.method == 'POST':
-        veiculo.delete()  # DELETE FROM estoque WHERE id_carro = ...
-        return redirect('estoque_lista')
-    return render(request, 'core/estoque_excluir.html', {'veiculo': veiculo})
+        try:
+            veiculo.delete()  # DELETE FROM estoque WHERE id_carro = ...
+            return redirect('estoque_lista')
+        except ProtectedError:
+            erro = 'Não é possível excluir: este veículo tem vendas registradas.'
+    return render(request, 'core/estoque_excluir.html', {'veiculo': veiculo, 'erro': erro})
+
+
+# Consultar vendas (JOIN com vendedores e estoque, filtro por vendedor e tipo)
+@login_required
+def venda_lista(request):
+    vendedor = request.GET.get('vendedor', '')
+    tipo = request.GET.get('tipo', '')
+    vendas = CarroVenda.objects.select_related('vendedor', 'carro')  # JOIN vendedores e estoque
+    if vendedor:
+        vendas = vendas.filter(vendedor_id=vendedor)  # WHERE idvendedores = ...
+    if tipo:
+        vendas = vendas.filter(carro__tipo_veiculo=tipo)  # WHERE estoque.tipo_veiculo = ...
+    contexto = {
+        'vendas': vendas,
+        'vendedores': Vendedor.objects.all(),
+        'tipos': Estoque.TIPOS,
+        'vendedor': vendedor,
+        'tipo': tipo,
+    }
+    return render(request, 'core/venda_lista.html', contexto)
+
+
+# Cadastrar venda
+@login_required
+def venda_criar(request):
+    form = CarroVendaForm(request.POST or None)
+    if form.is_valid():
+        form.save()  # INSERT INTO carros_vendas ...
+        return redirect('venda_lista')
+    return render(request, 'core/venda_form.html', {'form': form, 'titulo': 'Nova venda'})
+
+
+# Atualizar venda
+@login_required
+def venda_editar(request, id):
+    venda = get_object_or_404(CarroVenda, token_venda=id)
+    form = CarroVendaForm(request.POST or None, instance=venda)
+    if form.is_valid():
+        form.save()  # UPDATE carros_vendas SET ... WHERE token_venda = ...
+        return redirect('venda_lista')
+    return render(request, 'core/venda_form.html', {'form': form, 'titulo': 'Editar venda'})
+
+
+# Excluir venda
+@login_required
+def venda_excluir(request, id):
+    venda = get_object_or_404(CarroVenda, token_venda=id)
+    if request.method == 'POST':
+        venda.delete()  # DELETE FROM carros_vendas WHERE token_venda = ...
+        return redirect('venda_lista')
+    return render(request, 'core/venda_excluir.html', {'venda': venda})

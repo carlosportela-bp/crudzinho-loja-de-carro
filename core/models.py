@@ -32,3 +32,18 @@ class Estoque(models.Model):
 
     def __str__(self):
         return f'#{self.id_carro} - {self.get_tipo_veiculo_display()}'
+
+
+class CarroVenda(models.Model):
+    token_venda = models.AutoField(primary_key=True)
+    # chaves estrangeiras: PROTECT impede apagar vendedor/veículo que já tem venda
+    vendedor = models.ForeignKey(Vendedor, on_delete=models.PROTECT, db_column='idvendedores')
+    carro = models.ForeignKey(Estoque, on_delete=models.PROTECT, db_column='id_carro')
+
+    class Meta:
+        managed = False
+        db_table = 'carros_vendas'
+        ordering = ['-token_venda']
+
+    def __str__(self):
+        return f'Venda {self.token_venda}'

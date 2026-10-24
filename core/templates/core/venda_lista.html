@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Vendas</title>
+</head>
+<body>
+    <p><a href="{% url 'home' %}">Início</a></p>
+    <h1>Vendas</h1>
+
+    <form method="get">
+        <select name="vendedor">
+            <option value="">Todos os vendedores</option>
+            {% for v in vendedores %}
+                <option value="{{ v.id }}" {% if vendedor == v.id|stringformat:'s' %}selected{% endif %}>{{ v.nome }}</option>
+            {% endfor %}
+        </select>
+        <select name="tipo">
+            <option value="">Todos os tipos</option>
+            {% for valor, nome in tipos %}
+                <option value="{{ valor }}" {% if tipo == valor|stringformat:'s' %}selected{% endif %}>{{ nome }}</option>
+            {% endfor %}
+        </select>
+        <button>Filtrar</button>
+    </form>
+
+    <p><a href="{% url 'venda_criar' %}">+ Nova venda</a></p>
+
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Token</th>
+            <th>Vendedor</th>
+            <th>Veículo</th>
+            <th>Consignado</th>
+            <th>Ações</th>
+        </tr>
+        {% for venda in vendas %}
+        <tr>
+            <td>{{ venda.token_venda }}</td>
+            <td>{{ venda.vendedor.nome }}</td>
+            <td>{{ venda.carro }}</td>
+            <td>{{ venda.carro.consignado|yesno:'Sim,Não' }}</td>
+            <td>
+                <a href="{% url 'venda_editar' venda.token_venda %}">Editar</a>
+                <a href="{% url 'venda_excluir' venda.token_venda %}">Excluir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Nenhuma venda encontrada.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
