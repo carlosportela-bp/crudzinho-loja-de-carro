@@ -28,14 +28,22 @@
     <table border="1" cellpadding="6">
         <tr>
             <th>ID</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Ano</th>
             <th>Tipo</th>
+            <th>Preço</th>
             <th>Consignado</th>
             <th>Ações</th>
         </tr>
         {% for veiculo in veiculos %}
         <tr>
             <td>{{ veiculo.id_carro }}</td>
+            <td>{{ veiculo.marca }}</td>
+            <td>{{ veiculo.modelo }}</td>
+            <td>{{ veiculo.ano }}</td>
             <td>{{ veiculo.get_tipo_veiculo_display }}</td>
+            <td>R$ {{ veiculo.preco|floatformat:"2g" }}</td>
             <td>{{ veiculo.consignado|yesno:'Sim,Não' }}</td>
             <td>
                 <a href="{% url 'estoque_editar' veiculo.id_carro %}">Editar</a>
@@ -43,7 +51,7 @@
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="4">Nenhum veículo encontrado.</td></tr>
+        <tr><td colspan="8">Nenhum veículo encontrado.</td></tr>
         {% endfor %}
     </table>
 </body>

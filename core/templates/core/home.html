@@ -6,6 +6,7 @@
 </head>
 <body>
     <p>Logado como {{ user.username }}</p>
+    <p><a href="{% url 'dashboard' %}">Dashboard</a></p>
     <p><a href="{% url 'vendedor_lista' %}">Vendedores</a></p>
     <p><a href="{% url 'estoque_lista' %}">Estoque</a></p>
     <p><a href="{% url 'venda_lista' %}">Vendas</a></p>

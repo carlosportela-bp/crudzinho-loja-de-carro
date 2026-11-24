@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard · Loja de Carros</title>
+    <style>
+        :root {
+            --fundo: #f4f6f9;
+            --cartao: #ffffff;
+            --texto: #1f2933;
+            --suave: #616e7c;
+            --borda: #e1e5ea;
+            --destaque: #2563eb;
+            --tag: #eef2ff;
+            --tag-texto: #3730a3;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: var(--fundo);
+            color: var(--texto);
+        }
+        header {
+            background: var(--cartao);
+            border-bottom: 1px solid var(--borda);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        header h1 { font-size: 20px; margin: 0; }
+        nav a { color: var(--destaque); text-decoration: none; margin-left: 16px; }
+        nav a:hover { text-decoration: underline; }
+        main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+        h2 { font-size: 16px; margin: 0 0 4px; }
+        .sub { color: var(--suave); font-size: 13px; margin: 0 0 12px; }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .grade {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 520px) { .grade { grid-template-columns: 1fr; } }
+
+        .cartao {
+            background: var(--cartao);
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            padding: 16px;
+            min-width: 0;
+        }
+        .kpi .titulo { color: var(--suave); font-size: 13px; }
+        .kpi .valor { font-size: 26px; font-weight: 700; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+        .kpi .detalhe { color: var(--suave); font-size: 13px; min-height: 18px; }
+
+        .tags { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 4px; }
+        .tag {
+            background: var(--tag);
+            color: var(--tag-texto);
+            font: 600 11px/1 ui-monospace, Consolas, monospace;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+        details { margin-top: 10px; }
+        summary { cursor: pointer; color: var(--destaque); font-size: 13px; }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin: 8px 0 0;
+        }
+        .grafico { position: relative; height: 300px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borda); }
+        th { color: var(--suave); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .tabela { overflow-x: auto; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Dashboard · Loja de Carros</h1>
+    <nav>
+        <a href="{% url 'home' %}">Início</a>
+        <a href="{% url 'vendedor_lista' %}">Vendedores</a>
+        <a href="{% url 'estoque_lista' %}">Estoque</a>
+        <a href="{% url 'venda_lista' %}">Vendas</a>
+    </nav>
+</header>
+
+<main>
+    <!-- KPIs -->
+    <section class="kpis">
+        {% for kpi in kpis %}
+        <div class="cartao kpi">
+            <div class="titulo">{{ kpi.titulo }}</div>
+            <div class="valor">{{ kpi.valor }}</div>
+            <div class="detalhe">{{ kpi.detalhe }}</div>
+            <div class="tags">{% for t in kpi.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+            <details><summary>Ver SQL</summary><pre>{{ kpi.sql }}</pre></details>
+        </div>
+        {% endfor %}
+    </section>
+
+    <!-- Gráficos -->
+    <section class="grade">
+        <div class="cartao">
+            <h2>Faturamento por mês</h2>
+            <p class="sub">Gráfico de linhas: soma das vendas de cada mês</p>
+            <div class="grafico"><canvas id="graficoMes"></canvas></div>
+            <div class="tags"><span class="tag">GROUP BY</span><span class="tag">SUM</span><span class="tag">COUNT</span></div>
+            <details><summary>Ver SQL</summary><pre>{{ sql_mes }}</pre></details>
+        </div>
+
+        <div class="cartao">
+            <h2>Faturamento por vendedor</h2>
+            <p class="sub">Gráfico de barras: inclui quem ainda não vendeu (LEFT JOIN)</p>
+            <div class="grafico"><canvas id="graficoVendedor"></canvas></div>
+            <div class="tags"><span class="tag">JOIN</span><span class="tag">GROUP BY</span><span class="tag">SUM</span></div>
+            <details><summary>Ver SQL</summary><pre>{{ sql_vendedor }}</pre></details>
+        </div>
+
+        <div class="cartao">
+            <h2>Vendas por tipo de veículo</h2>
+            <p class="sub">Gráfico de rosca: carros, motos e caminhonetes vendidos</p>
+            <div class="grafico"><canvas id="graficoTipo"></canvas></div>
+            <div class="tags"><span class="tag">JOIN</span><span class="tag">GROUP BY</span><span class="tag">COUNT</span></div>
+            <details><summary>Ver SQL</summary><pre>{{ sql_tipo }}</pre></details>
+        </div>
+
+        <div class="cartao">
+            <h2>Marcas com 2 ou mais vendas</h2>
+            <p class="sub">Gráfico de barras horizontais: grupos filtrados com HAVING</p>
+            <div class="grafico"><canvas id="graficoMarcas"></canvas></div>
+            <div class="tags"><span class="tag">JOIN</span><span class="tag">GROUP BY</span><span class="tag">HAVING</span></div>
+            <details><summary>Ver SQL</summary><pre>{{ sql_marcas }}</pre></details>
+        </div>
+    </section>
+
+    <!-- Tabelas -->
+    <section class="grade">
+        <div class="cartao">
+            <h2>Vendedores acima da média</h2>
+            <p class="sub">Faturamento maior que a média por vendedor ({{ media_vendedor }})</p>
+            <div class="tabela">
+                <table>
+                    <tr>
+                        <th>Vendedor</th>
+                        <th class="num">Vendas</th>
+                        <th class="num">Faturamento</th>
+                        <th class="num">Menor</th>
+                        <th class="num">Maior</th>
+                    </tr>
+                    {% for l in acima_media %}
+                    <tr>
+                        <td>{{ l.nome }}</td>
+                        <td class="num">{{ l.vendas }}</td>
+                        <td class="num">{{ l.faturamento }}</td>
+                        <td class="num">{{ l.menor_venda }}</td>
+                        <td class="num">{{ l.maior_venda }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Nenhum vendedor acima da média.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="tags">
+                <span class="tag">JOIN</span><span class="tag">GROUP BY</span><span class="tag">HAVING</span>
+                <span class="tag">SUBQUERY</span><span class="tag">MIN</span><span class="tag">MAX</span>
+            </div>
+            <details><summary>Ver SQL</summary><pre>{{ sql_acima_media }}</pre></details>
+        </div>
+
+        <div class="cartao">
+            <h2>Estoque disponível por tipo</h2>
+            <p class="sub">Veículos ainda não vendidos: quantidade e faixa de preço</p>
+            <div class="tabela">
+                <table>
+                    <tr>
+                        <th>Tipo</th>
+                        <th class="num">Qtd.</th>
+                        <th class="num">Mais barato</th>
+                        <th class="num">Mais caro</th>
+                        <th class="num">Preço médio</th>
+                    </tr>
+                    {% for l in estoque_tipo %}
+                    <tr>
+                        <td>{{ l.tipo }}</td>
+                        <td class="num">{{ l.quantidade }}</td>
+                        <td class="num">{{ l.menor_preco }}</td>
+                        <td class="num">{{ l.maior_preco }}</td>
+                        <td class="num">{{ l.preco_medio }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Nenhum veículo disponível.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="tags">
+                <span class="tag">MIN</span><span class="tag">MAX</span><span class="tag">GROUP BY</span><span class="tag">SUBQUERY</span>
+            </div>
+            <details><summary>Ver SQL</summary><pre>{{ sql_estoque_tipo }}</pre></details>
+        </div>
+    </section>
+</main>
+
+{{ graficos|json_script:"dados-graficos" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    const dados = JSON.parse(document.getElementById('dados-graficos').textContent);
+    const azul = '#2563eb';
+    const cores = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+    const moeda = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+    const eixoMoeda = { beginAtZero: true, ticks: { callback: v => moeda(v) } };
+
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    Chart.defaults.maintainAspectRatio = false;
+
+    // Linhas: faturamento por mês
+    new Chart(document.getElementById('graficoMes'), {
+        type: 'line',
+        data: {
+            labels: dados.mes.labels,
+            datasets: [{
+                label: 'Faturamento',
+                data: dados.mes.faturamento,
+                borderColor: azul,
+                backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                fill: true,
+                tension: 0.3,
+            }],
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: c => `${moeda(c.parsed.y)} (${dados.mes.vendas[c.dataIndex]} vendas)`,
+                    },
+                },
+            },
+            scales: { y: eixoMoeda },
+        },
+    });
+
+    // Barras: faturamento por vendedor
+    new Chart(document.getElementById('graficoVendedor'), {
+        type: 'bar',
+        data: {
+            labels: dados.vendedor.labels,
+            datasets: [{ label: 'Faturamento', data: dados.vendedor.faturamento, backgroundColor: azul }],
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: c => moeda(c.parsed.y) } },
+            },
+            scales: { y: eixoMoeda },
+        },
+    });
+
+    // Rosca: vendas por tipo
+    new Chart(document.getElementById('graficoTipo'), {
+        type: 'doughnut',
+        data: {
+            labels: dados.tipo.labels,
+            datasets: [{ data: dados.tipo.vendas, backgroundColor: cores }],
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} vendas` } },
+            },
+        },
+    });
+
+    // Barras horizontais: marcas com 2+ vendas
+    new Chart(document.getElementById('graficoMarcas'), {
+        type: 'bar',
+        data: {
+            labels: dados.marcas.labels,
+            datasets: [{ label: 'Vendas', data: dados.marcas.vendas, backgroundColor: '#10b981' }],
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { precision: 0 } } },
+        },
+    });
+</script>
+</body>
+</html>

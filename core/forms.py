@@ -12,10 +12,13 @@ class VendedorForm(forms.ModelForm):
 class EstoqueForm(forms.ModelForm):
     class Meta:
         model = Estoque
-        fields = ['tipo_veiculo', 'consignado']
+        fields = ['marca', 'modelo', 'ano', 'tipo_veiculo', 'preco', 'consignado']
 
 
 class CarroVendaForm(forms.ModelForm):
     class Meta:
         model = CarroVenda
-        fields = ['vendedor', 'carro']
+        fields = ['vendedor', 'carro', 'data_venda', 'valor_venda']
+        widgets = {
+            'data_venda': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+        }
